@@ -1,103 +1,108 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<string[]>([]);
+  const [message, setMessage] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+  // Charger la liste des fichiers au montage
+  useEffect(() => {
+    fetchFiles();
+  }, []);
+
+  // Fonction pour récupérer la liste des fichiers
+  const fetchFiles = async () => {
+    try {
+      const response = await fetch("/api/files");
+      const data = await response.json();
+      if (data.files) {
+        setFiles(data.files);
+      }
+    } catch (error) {
+      setMessage("Erreur lors du chargement des fichiers");
+    }
+  };
+
+  // Gérer la sélection du fichier
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  // Gérer l'upload du fichier
+  const handleUpload = async () => {
+    if (!file) {
+      setMessage("Veuillez sélectionner un fichier");
+      return;
+    }
+
+    setIsLoading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+
+      if (data.message) {
+        setMessage(data.message);
+        setFile(null);
+        fetchFiles(); // Rafraîchir la liste des fichiers
+      } else {
+        setMessage(data.error || "Erreur lors de l'upload");
+      }
+    } catch (error) {
+      setMessage("Erreur lors de l'upload");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+      <h1 className="text-3xl font-bold mb-6">Uploader des fichiers vers S3</h1>
+
+      {/* Formulaire d'upload */}
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <input
+          type="file"
+          onChange={handleFileChange}
+          className="mb-4 w-full p-2 border rounded"
+        />
+        <button
+          onClick={handleUpload}
+          disabled={isLoading}
+          className={`w-full p-2 rounded text-white ${
+            isLoading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
+          }`}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          {isLoading ? "Chargement..." : "Uploader"}
+        </button>
+        {message && <p className="mt-4 text-center text-red-500">{message}</p>}
+      </div>
+
+      {/* Liste des fichiers */}
+      <div className="mt-8 w-full max-w-md">
+        <h2 className="text-xl font-semibold mb-4">Fichiers dans S3</h2>
+        {files.length > 0 ? (
+          <ul className="bg-white p-4 rounded-lg shadow-lg">
+            {files.map((fileName) => (
+              <li key={fileName} className="py-2 border-b last:border-b-0">
+                {fileName}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-center text-gray-500">Aucun fichier trouvé</p>
+        )}
+      </div>
     </div>
   );
 }
