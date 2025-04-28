@@ -29,7 +29,7 @@ npm install
 
 Copy the .env.example file to create a .env.local file:
 
-`cp .env.example .env.local`
+`cp env.example .env.local`
 
 Edit .env.local and fill in your AWS credentials and bucket details:
 
