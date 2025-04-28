@@ -29,28 +29,15 @@ npm install
 
 Copy the .env.example file to create a .env.local file:
 
-cp .env.example .env.local
+`cp .env.example .env.local`
 
 Edit .env.local and fill in your AWS credentials and bucket details:
 
-### 4. Configure S3 CORS
+### 4. Run the Application
 
-In the AWS S3 console, navigate to your bucket's "Permissions" tab and add the following CORS configuration:
+` npm run dev`
 
-[
-{
-"AllowedHeaders": ["*"],
-"AllowedMethods": ["GET", "PUT", "POST"],
-"AllowedOrigins": ["http://localhost:3000"],
-"MaxAgeSeconds": 3000
-}
-]
-
-### 5. Run the Application
-
-npm run dev
-
-Open http://localhost:3000 in your browser to access the application.
+Open `http://localhost:3000` in your browser to access the application.
 
 ## Usage
 
